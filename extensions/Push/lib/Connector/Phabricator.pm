@@ -25,30 +25,31 @@ use constant SECURITY_GROUP_KEY => '?'; # TODO:  Need to figure out what key thi
 # TODO:  Should we check if PhabBugz is enabled and bail if not?
 
 sub options {
-    return ({
-                name => 'phabricator_url',
-                label => 'Phabricator URL',
-                type => 'string',
-                default => '',
-                required => 1,
-            });
+    return (
+        {
+            name     => 'phabricator_url',
+            label    => 'Phabricator URL',
+            type     => 'string',
+            default  => '',
+            required => 1,
+        }
+    );
 }
 
 sub should_send {
-    my ($self, $message) = @_;
+    my ( $self, $message ) = @_;
 
     my $logger = Bugzilla->push_ext->logger;
     $logger->info('should_send');
 
     # TODO:  Ensure the specific security group is what was changed
-    my $did_change_security = ($message->routing_key =~ /^(?:attachment|bug)\.modify:.*\bis_private\b/);
-
-    my $data = $message->payload_decoded;
-    my $bug_data = $self->_get_bug_data($data) || return 0;
-    my $bug = Bugzilla::Bug->new({ id => $bug_data->{id}, cache => 1 });
+    my $did_change_security      = $message->routing_key =~ /^(?:attachment|bug)\.modify:.*\bis_private\b/;
+    my $data                     = $message->payload_decoded;
+    my $bug_data                 = $self->_get_bug_data($data) || return 0;
+    my $bug                      = Bugzilla::Bug->new( { id => $bug_data->{id}, cache => 1 } );
     my $has_phab_stub_attachment = $bug->has_attachment_with_mimetype(PHAB_CONTENT_TYPE);
 
-    if($did_change_security && $has_phab_stub_attachment) {
+    if ( $did_change_security && $has_phab_stub_attachment ) {
         return 1;
     }
 
@@ -64,13 +65,15 @@ sub send {
 }
 
 sub _get_bug_data {
-    my ($self, $data) = @_;
+    my ( $self, $data ) = @_;
     my $target = $data->{event}->{target};
-    if ($target eq 'bug') {
+    if ( $target eq 'bug' ) {
         return $data->{bug};
-    } elsif (exists $data->{$target}->{bug}) {
+    }
+    elsif ( exists $data->{$target}->{bug} ) {
         return $data->{$target}->{bug};
-    } else {
+    }
+    else {
         return;
     }
 }
