@@ -130,7 +130,7 @@ sub _get_attachment_revisions() {
     my @attachments = grep {
              $_->isobsolete == 0
           && $_->contenttype eq PHAB_CONTENT_TYPE
-          && $_->attacher->login ne 'phab-bot@bmo.tld'
+          && $_->attacher->login eq 'phab-bot@bmo.tld'
     } @{ $bug->attachments() };
 
     if (@attachments) {
